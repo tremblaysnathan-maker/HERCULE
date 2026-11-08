@@ -1,13 +1,13 @@
-# 🏛️ HERCUL AI - Système d'Exploitation & Agent Personnel Autonome
+# 🏛️ HERCULE - Agent Personnel Autonome Multi-Agents (100% Local)
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
+[![Local First](https://img.shields.io/badge/Execution-100%25_Local-10b981.svg)](http://localhost:8000)
 [![Google Gemini](https://img.shields.io/badge/Google_Gemini-3.7_Flash-8E75B2.svg)](https://aistudio.google.com/)
 [![Discord Bot](https://img.shields.io/badge/Discord.py-2.3+-5865F2.svg)](https://discord.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**Hercul** est un agent d'intelligence artificielle personnel et autonome, conçu pour tourner **24h/24 sur un serveur VPS**, interactif directement via **Discord**, le **Web** ou **Tasker (Android)**.
+**Hercule** (`HERCULE v3.0`) est un système d'intelligence artificielle personnel et autonome multi-agents, conçu pour tourner **100 % en local sur votre machine** (Windows, macOS, Linux ou Docker local) et travailler en continu 24h/24 via **Discord**, son **Dashboard Holographique 3D Web** (`http://localhost:8000`) ou **Tasker (Android)**.
 
 Il allie la puissance de réflexion de **Google Gemini** à une suite d'outils connectés (Google Workspace, Deezer, Suivi de colis universel) et des utilitaires **100 % locaux et gratuits** (navigation web furtive, vision par ordinateur, cartes mentales Obsidian Canvas, sécurité Guardrails).
 
@@ -103,12 +103,12 @@ hercul/
 
 ---
 
-## 🚀 Démarrage Rapide
+## 🚀 Démarrage Rapide (100% Local)
 
 ### 1. Cloner le dépôt
 ```bash
-git clone https://github.com/VOTRE_NOM/hercul.git
-cd hercul
+git clone https://github.com/VOTRE_NOM/HERCULE.git
+cd HERCULE
 ```
 
 ### 2. Configuration de l'environnement
@@ -117,10 +117,9 @@ Copiez le modèle de configuration et éditez vos identifiants :
 cp .env.example .env
 ```
 
-Renseignez au minimum votre clé Google Gemini dans le fichier `.env` :
+Renseignez votre clé Google Gemini dans le fichier `.env` :
 ```ini
 GEMINI_API_KEY=votre_cle_api_ici
-HERCUL_SECRET_KEY=votre_cle_secrete_ici
 DISCORD_BOT_TOKEN=votre_token_discord_ici
 ```
 
@@ -128,17 +127,21 @@ DISCORD_BOT_TOKEN=votre_token_discord_ici
 
 ---
 
-### 3. Option A : Lancer en local (Développement)
+### 3. Lancer HERCULE en Local (En 1 clic sur Windows ou via Python)
 
+**Option 1 — En 1 clic sur Windows :**
+Double-cliquez simplement sur **`LANCER_HERCULE.bat`** ! Il configure l'environnement local, vérifie les dépendances et ouvre automatiquement **http://localhost:8000**.
+
+**Option 2 — En ligne de commande :**
 ```bash
 # 1. Installer les dépendances
 pip install -r requirements.txt
 playwright install chromium
 
-# 2. Démarrer Hercul
+# 2. Démarrer Hercule en local
 python start.py
 ```
-L'interface Web sera accessible sur : **http://localhost:8000**
+L'interface Web Holographique 3D s'ouvre automatiquement sur : **http://localhost:8000** (aucune clé secrète n'est requise en local sur `localhost`).
 
 ---
 

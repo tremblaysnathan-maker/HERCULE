@@ -37,9 +37,9 @@ def get_active_user_id() -> Optional[int]:
 
 @bot.event
 async def on_ready():
-    print(f"\n🤖 [Discord] Hercul Bot connecté : {bot.user} (ID: {bot.user.id})")
-    print(f"💬 [Discord] Prêt en Message Privé avec Minuteurs Proactifs & Vocal !\n")
-    await bot.change_presence(activity=discord.Game(name="Opérateur Autonome 🔮"))
+    print(f"\n🤖 [Discord] Hercule Bot connecté en Local : {bot.user} (ID: {bot.user.id})")
+    print(f"💬 [Discord] Prêt en Message Privé avec Swarm Multi-Agents, Minuteurs Proactifs & Vocal !\n")
+    await bot.change_presence(activity=discord.Game(name="Hercule v3.0 — Local 🔮"))
 
     # Lancement des boucles du Scheduler et de la Sentinelle
     asyncio.create_task(scheduler.run_scheduler_loop(
@@ -67,20 +67,20 @@ async def handle_due_reminder(reminder: dict):
 
         if user:
             dm = user.dm_channel or await user.create_dm()
-            alert_text = f"⏰ **RAPPEL HERCUL** ⏰\n« {reminder['message']} »"
+            alert_text = f"⏰ **RAPPEL HERCULE** ⏰\n« {reminder['message']} »"
             await dm.send(alert_text)
             print(f"✅ [Discord] Rappel envoyé avec succès à {user.name} : '{reminder['message']}'")
 
             # Synthèse vocale de rappel avec la voix Vivienne
             try:
-                vocal_prompt = f"Nathan, voici ton rappel : {reminder['message']}"
+                vocal_prompt = f"Voici ton rappel d'Hercule : {reminder['message']}"
                 communicate = edge_tts.Communicate(vocal_prompt, voice="fr-FR-VivienneMultilingualNeural", rate="+4%")
                 audio_data = io.BytesIO()
                 async for chunk in communicate.stream():
                     if chunk["type"] == "audio":
                         audio_data.write(chunk["data"])
                 audio_data.seek(0)
-                await dm.send(file=discord.File(fp=audio_data, filename="rappel_hercul.mp3"))
+                await dm.send(file=discord.File(fp=audio_data, filename="rappel_hercule.mp3"))
             except Exception as e:
                 print(f"[Discord] Erreur audio rappel : {e}")
 
@@ -114,7 +114,7 @@ async def handle_morning_briefing(cfg: dict):
         result = await agent.chat(message=briefing_prompt, session_id="morning_briefing", fast_mode=False)
         response_text = result.get("response", "Bonjour Nathan, voici votre briefing du jour.")
 
-        await dm.send(f"☀️ **MORNING BRIEFING HERCUL** ☀️\n\n{response_text}")
+        await dm.send(f"☀️ **MORNING BRIEFING HERCULE** ☀️\n\n{response_text}")
 
         try:
             communicate = edge_tts.Communicate(response_text, voice="fr-FR-VivienneMultilingualNeural", rate="+4%")
@@ -152,11 +152,11 @@ async def on_message(message: discord.Message):
         return
 
     is_dm = isinstance(message.channel, discord.DMChannel)
-    is_mentioned = bot.user in message.mentions
+    is_mentioned = bot.user in message.mentions or "hercule" in message.content.lower()
 
     if is_dm or is_mentioned:
         _last_dm_user_id = message.author.id
-        # Mémorisation permanente de l'ID Discord de Nathan
+        # Mémorisation permanente de l'ID Discord de l'opérateur
         memory.profile.set_preference("discord_user_id", str(message.author.id))
 
         user_content = message.content.replace(f"<@{bot.user.id}>", "").strip()
@@ -185,7 +185,7 @@ async def on_message(message: discord.Message):
 
                 full_prompt = f"{user_content}\n" + "\n".join(attached_context)
                 if not full_prompt.strip():
-                    full_prompt = "Bonjour Hercul"
+                    full_prompt = "Bonjour Hercule"
 
                 session_id = f"discord_{message.author.id}"
                 result = await agent.chat(
@@ -221,7 +221,7 @@ async def on_message(message: discord.Message):
                         if chunk["type"] == "audio":
                             audio_data.write(chunk["data"])
                     audio_data.seek(0)
-                    await message.channel.send(file=discord.File(fp=audio_data, filename="hercul_vocal.mp3"))
+                    await message.channel.send(file=discord.File(fp=audio_data, filename="hercule_vocal.mp3"))
 
             except Exception as e:
                 await message.reply(f"⚠️ Erreur : {str(e)}")

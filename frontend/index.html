@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HERCUL - Holographic Neural Core</title>
+  <title>HERCULE - Holographic Neural Core (Local)</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -597,7 +597,7 @@
       <div class="arc-emblem">
         <div class="emblem-inner-tri"></div>
       </div>
-      <span class="brand-title">HERCUL CORE</span>
+      <span class="brand-title">HERCULE CORE</span>
     </div>
 
     <div class="telemetry-pills">
@@ -649,7 +649,7 @@
     <div class="capsule-top" id="capsule-toggle">
       <div class="capsule-label">
         <span class="core-sparkle"></span>
-        <span>CONSOLE D'EXÉCUTION HERCUL</span>
+        <span>CONSOLE D'EXÉCUTION HERCULE</span>
       </div>
       <div class="capsule-tools">
         <button id="clear-chat-btn" class="clean-btn">Effacer</button>
@@ -660,17 +660,17 @@
     <div class="capsule-drawer" id="capsule-drawer">
       <div class="dialogue-stream" id="messages-container">
         <div class="dialogue-bubble assistant">
-          <span class="bubble-speaker">HERCUL :</span>
-          <div class="msg-content">Réacteur Holographique en ligne. Voix humaine Vivienne Neural prête. Vous pouvez interagir avec le modèle 3D à la souris ou me donner une mission.</div>
+          <span class="bubble-speaker">HERCULE :</span>
+          <div class="msg-content">Réacteur Holographique HERCULE v3.0 en ligne (Exécution Locale). Escouade Multi-Agents, Objectifs Continus et Voix Vivienne Neural prêts.</div>
         </div>
       </div>
 
       <div class="input-dock">
         <form id="chat-form">
-          <button type="button" id="mic-btn" class="mic-button" title="Parler à Hercul">
+          <button type="button" id="mic-btn" class="mic-button" title="Parler à Hercule">
             <span>🎙️</span>
           </button>
-          <input type="text" id="user-input" class="mission-input" placeholder="Donnez une mission ou posez une question à Hercul..." autocomplete="off">
+          <input type="text" id="user-input" class="mission-input" placeholder="Donnez une mission ou posez une question à Hercule..." autocomplete="off">
           <button type="submit" id="send-btn" class="execute-btn">EXÉCUTER</button>
         </form>
       </div>
@@ -683,7 +683,7 @@
     <span class="sound-bar"></span>
     <span class="sound-bar"></span>
     <span class="sound-bar"></span>
-    <span style="font-size:0.75rem;color:#00f0ff;margin-left:6px;font-weight:700;font-family:'Orbitron',monospace">HERCUL S'EXPRIME...</span>
+    <span style="font-size:0.75rem;color:#00f0ff;margin-left:6px;font-weight:700;font-family:'Orbitron',monospace">HERCULE S'EXPRIME...</span>
   </div>
 
   <!-- SCRIPT DU RÉACTEUR HOLOGRAPHIQUE 3D & VOIX VIVIENNE -->
@@ -1070,7 +1070,7 @@
                 <h4>FAITS MÉMORISÉS (${facts.length})</h4>
             `;
             if (facts.length === 0) {
-              html += `<p style="color:#94a3b8">Hercul apprendra de vos conversations automatiquement.</p>`;
+              html += `<p style="color:#94a3b8">Hercule apprendra de vos conversations automatiquement.</p>`;
             } else {
               facts.forEach(f => {
                 html += `<p style="margin-bottom:6px">• ${escapeHtml(f.fact)}</p>`;
@@ -1093,7 +1093,7 @@
             </div>
             <div class="sub-card">
               <h4>DERNIÈRE CAPTURE VISUELLE</h4>
-              <div id="live-browser-view" style="color:#94a3b8">Aucune capture récente. Donnez une mission web à Hercul !</div>
+              <div id="live-browser-view" style="color:#94a3b8">Aucune capture récente. Donnez une mission web à Hercule !</div>
             </div>
           `;
 
@@ -1290,7 +1290,7 @@
         const d = document.createElement('div');
         d.className = `dialogue-bubble ${role}`;
         d.innerHTML = `
-          <span class="bubble-speaker">${role === 'user' ? 'NATHAN :' : 'HERCUL :'}</span>
+          <span class="bubble-speaker">${role === 'user' ? 'VOUS :' : 'HERCULE :'}</span>
           <div class="msg-content">${escapeHtml(text)}</div>
         `;
         messagesContainer.appendChild(d);

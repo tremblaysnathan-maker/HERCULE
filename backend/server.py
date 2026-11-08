@@ -24,9 +24,9 @@ except Exception as e:
     start_discord_bot = None
 
 app = FastAPI(
-    title="Hercul AI Agent Core",
-    description="Backend API de l'agent autonome Hercul (Gemini, Mémoire, TTS Humain, Tasker, Discord)",
-    version="2.0.0"
+    title="Hercule AI Agent Core (Local)",
+    description="Backend API de l'agent autonome Multi-Agents HERCULE v3.0 (Exécution 100% Locale, Swarm, Objectifs Continus, TTS, Discord)",
+    version="3.0.0"
 )
 
 # Lancement automatique du bot Discord, du Secrétaire Proactif, du Chasseur Web et du Bilan Dimanche
@@ -89,25 +89,32 @@ app.add_middleware(
 memory_manager = MemoryManager()
 agent = HerculAgent(memory_manager=memory_manager)
 
-# ----------------- SÉCURITÉ & AUTHENTIFICATION VPS -----------------
+# ----------------- SÉCURITÉ & AUTHENTIFICATION (AUTO-BYPASS EN LOCAL) -----------------
 
 def verify_api_key(
+    request: Request,
     x_hercul_key: Optional[str] = Header(None, alias="X-Hercul-Key"),
+    x_hercule_key: Optional[str] = Header(None, alias="X-Hercule-Key"),
     authorization: Optional[str] = Header(None),
     key: Optional[str] = Query(None)
 ):
+    # Exécution 100% Locale : autorisation directe sur localhost / 127.0.0.1
+    client_host = request.client.host if request.client else ""
+    if client_host in ["127.0.0.1", "localhost", "::1"]:
+        return True
+
     secret = settings.HERCUL_SECRET_KEY
     if not secret or secret == "hercul_secret_key_default":
         return True
 
-    provided_key = x_hercul_key or key
+    provided_key = x_hercule_key or x_hercul_key or key
     if not provided_key and authorization and authorization.startswith("Bearer "):
         provided_key = authorization.replace("Bearer ", "").strip()
 
     if provided_key != secret:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Clé d'authentification Hercul invalide ou manquante."
+            detail="Clé d'authentification Hercule invalide ou manquante."
         )
     return True
 
@@ -422,7 +429,7 @@ async def get_memory_graph():
     """Renvoie les constellations neuronales de la mémoire et du Swarm v3.0 pour l'affichage 3D."""
     profile = memory_manager.profile.data
     nodes = [
-        {"id": "core", "label": "HERCUL CORE v3.0", "group": "ai", "size": 26, "color": "#00f0ff"},
+        {"id": "core", "label": "HERCULE CORE v3.0", "group": "ai", "size": 26, "color": "#00f0ff"},
         {"id": "swarm", "label": "Swarm Multi-Agents", "group": "ai", "size": 20, "color": "#ec4899"},
         {"id": "goals", "label": "Objectifs Continus 24/7", "group": "ai", "size": 18, "color": "#14b8a6"},
         {"id": "skills", "label": "Skill Forge Auto-Évolutif", "group": "ai", "size": 18, "color": "#eab308"},
@@ -489,10 +496,12 @@ async def walkie_talkie_voice(req: ChatRequest):
 async def health_check():
     return {
         "status": "online",
-        "agent": "Hercul AI V3",
+        "mode": "100% Local",
+        "agent": "Hercule AI v3.0",
         "models": {
             "pro": settings.GEMINI_PRO_MODEL,
-            "flash": settings.GEMINI_FLASH_MODEL
+            "flash": settings.GEMINI_FLASH_MODEL,
+            "flash_lite": settings.GEMINI_FLASH_LITE_MODEL
         }
     }
 

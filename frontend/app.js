@@ -342,13 +342,13 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="node-card">
             <h4>PROFIL</h4>
             <p><strong>Nom :</strong> ${escapeHtml(prefs.name || 'Nathan')}</p>
-            <p><strong>Environnement :</strong> ${escapeHtml(prefs.environment || 'VPS Debian / Tasker')}</p>
+            <p><strong>Environnement :</strong> ${escapeHtml(prefs.environment || 'Exécution 100% Locale')}</p>
           </div>
           <div class="node-card">
             <h4>FAITS APPRIS SILENCIEUSEMENT (${facts.length})</h4>
         `;
         if (facts.length === 0) {
-          html += `<p style="color:var(--text-muted)">Hercul apprendra de vos conversations automatiquement.</p>`;
+          html += `<p style="color:var(--text-muted)">Hercule apprendra de vos conversations automatiquement.</p>`;
         } else {
           facts.forEach(f => {
             html += `<p style="margin-bottom:6px">• ${escapeHtml(f.fact)}</p>`;
@@ -369,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="node-card">
           <h4>DERNIÈRE INSPECTION VISUELLE</h4>
-          <div id="live-browser-view" style="color:var(--text-muted)">Aucune capture récente. Demandez à Hercul de visiter une page web !</div>
+          <div id="live-browser-view" style="color:var(--text-muted)">Aucune capture récente. Demandez à Hercule de visiter une page web !</div>
         </div>
       `;
 
@@ -548,7 +548,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const d = document.createElement('div');
     d.className = `log-entry ${role}`;
     d.innerHTML = `
-      <span class="log-sender">${role === 'user' ? 'NATHAN :' : 'HERCUL :'}</span>
+      <span class="log-sender">${role === 'user' ? 'VOUS :' : 'HERCULE :'}</span>
       <span class="log-body">${escapeHtml(text)}</span>
     `;
     messagesContainer.appendChild(d);
