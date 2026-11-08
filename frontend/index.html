@@ -616,15 +616,56 @@
     </div>
 
     <div class="top-tools">
+      <button type="button" onclick="document.getElementById('discord-setup-modal').style.display='flex'" class="pill-btn" title="Connecter facilement votre Bot Discord et votre clé Gemini">
+        <span>🤖</span> DISCORD & API
+      </button>
       <a href="/api/google/login" target="_blank" class="pill-btn" style="text-decoration:none" title="Connecter Gmail, Calendar et Drive">
         <span>🌐</span> GOOGLE CONNECT
       </a>
       <button id="tts-hud-btn" class="pill-btn" title="Activer / Couper la voix humaine">
         <span>🔊</span> VOIX ACTIVE
       </button>
-      <input type="password" id="secret-key-input" class="key-pill" placeholder="Clé VPS..." title="Clé API">
+      <input type="password" id="secret-key-input" class="key-pill" placeholder="Clé Locale (Optionnel)" title="Clé API">
     </div>
   </header>
+
+  <!-- MODAL CONNEXION FACILE DISCORD & CLÉ GEMINI -->
+  <div id="discord-setup-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;align-items:center;justify-content:center;padding:16px;">
+    <div style="background:#0f172a;border:1px solid rgba(0,240,255,0.4);border-radius:16px;max-width:520px;width:100%;padding:24px;color:#f8fafc;font-family:sans-serif;box-shadow:0 0 40px rgba(0,240,255,0.2);">
+      <h3 style="color:#00f0ff;margin-bottom:12px;font-size:1.15rem;">🤖 Connexion Facile : Discord & Gemini</h3>
+      <p style="font-size:0.82rem;color:#94a3b8;margin-bottom:14px;">Collez vos clés ci-dessous : Hercule les enregistre dans <code>.env</code> et démarre votre Bot Discord en direct sans redémarrer !</p>
+      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:4px;">1. Clé API Google Gemini (<a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#00f0ff">Obtenir ici</a>)</label>
+      <input type="password" id="modal-gemini-key" placeholder="AIzaSy..." style="width:100%;padding:10px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#fff;margin-bottom:12px;">
+      <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:4px;">2. Token du Bot Discord (Optionnel — <a href="https://discord.com/developers/applications" target="_blank" style="color:#00f0ff">Portail Discord</a>)</label>
+      <input type="password" id="modal-discord-token" placeholder="MTUz..." style="width:100%;padding:10px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#fff;margin-bottom:12px;">
+      <div id="modal-setup-msg" style="font-size:0.82rem;color:#10b981;margin-bottom:12px;"></div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" onclick="document.getElementById('discord-setup-modal').style.display='none'" class="pill-btn">Fermer</button>
+        <button type="button" onclick="saveEasySetup()" class="pill-btn" style="background:#00f0ff;color:#000;font-weight:800;">💾 Enregistrer & Connecter</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    async function saveEasySetup() {
+      const gKey = document.getElementById('modal-gemini-key').value.trim();
+      const dTok = document.getElementById('modal-discord-token').value.trim();
+      const msgEl = document.getElementById('modal-setup-msg');
+      msgEl.textContent = '⏳ Enregistrement et connexion en cours...';
+      try {
+        const r = await fetch('/api/config/setup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ gemini_api_key: gKey, discord_bot_token: dTok })
+        });
+        const d = await r.json();
+        msgEl.textContent = d.message || '✅ Connecté avec succès !';
+        setTimeout(() => { document.getElementById('discord-setup-modal').style.display = 'none'; }, 1200);
+      } catch (err) {
+        msgEl.style.color = '#ef4444';
+        msgEl.textContent = '❌ Erreur : ' + err.message;
+      }
+    }
+  </script>
 
   <!-- 2. MODES HOLOGRAPHIQUES DU RÉACTEUR (GAUCHE) -->
   <nav class="reactor-modes">

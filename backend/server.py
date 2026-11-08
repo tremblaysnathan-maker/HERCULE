@@ -130,6 +130,86 @@ class TTSRequest(BaseModel):
     text: str
     voice: Optional[str] = "fr-FR-VivienneMultilingualNeural"
 
+class SetupConfigRequest(BaseModel):
+    gemini_api_key: Optional[str] = None
+    discord_bot_token: Optional[str] = None
+
+# ----------------- CONNEXION FACILE DISCORD & CLÉS API -----------------
+
+@app.get("/api/config/setup", dependencies=[Depends(verify_api_key)])
+async def get_setup_status():
+    """Retourne l'état de configuration de Gemini et du Bot Discord."""
+    discord_connected = False
+    discord_bot_name = None
+    try:
+        from backend.discord_bot import bot as d_bot
+        if d_bot and d_bot.user:
+            discord_connected = True
+            discord_bot_name = f"{d_bot.user.name}"
+    except Exception:
+        pass
+
+    return {
+        "status": "success",
+        "gemini_configured": bool(settings.GEMINI_API_KEY and "your_" not in settings.GEMINI_API_KEY),
+        "discord_token_configured": bool(settings.DISCORD_BOT_TOKEN and "your_" not in settings.DISCORD_BOT_TOKEN),
+        "discord_connected": discord_connected,
+        "discord_bot_name": discord_bot_name
+    }
+
+@app.post("/api/config/setup", dependencies=[Depends(verify_api_key)])
+async def update_setup_config(req: SetupConfigRequest):
+    """Enregistre facilement le Token Discord et la clé Gemini dans .env et lance le bot en direct."""
+    env_path = settings.BASE_PATH / ".env"
+    lines = []
+    if env_path.exists():
+        with open(env_path, "r", encoding="utf-8") as f:
+            lines = f.read().splitlines()
+    elif (settings.BASE_PATH / ".env.example").exists():
+        with open(settings.BASE_PATH / ".env.example", "r", encoding="utf-8") as f:
+            lines = f.read().splitlines()
+
+    def set_env_var(key_name: str, val: str):
+        nonlocal lines
+        found = False
+        new_lines = []
+        for line in lines:
+            if line.strip().startswith(f"{key_name}="):
+                new_lines.append(f"{key_name}={val}")
+                found = True
+            else:
+                new_lines.append(line)
+        if not found:
+            new_lines.append(f"{key_name}={val}")
+        lines = new_lines
+
+    if req.gemini_api_key is not None and req.gemini_api_key.strip():
+        clean_gem = req.gemini_api_key.strip()
+        set_env_var("GEMINI_API_KEY", clean_gem)
+        os.environ["GEMINI_API_KEY"] = clean_gem
+        settings.GEMINI_API_KEY = clean_gem
+        from backend.core.gemini_client import GeminiClient
+        agent.client = GeminiClient(api_key=clean_gem)
+
+    discord_started = False
+    if req.discord_bot_token is not None and req.discord_bot_token.strip():
+        clean_disc = req.discord_bot_token.strip()
+        set_env_var("DISCORD_BOT_TOKEN", clean_disc)
+        os.environ["DISCORD_BOT_TOKEN"] = clean_disc
+        settings.DISCORD_BOT_TOKEN = clean_disc
+        if DISCORD_MODULE_AVAILABLE and start_discord_bot:
+            asyncio.create_task(start_discord_bot())
+            discord_started = True
+
+    with open(env_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
+
+    return {
+        "status": "success",
+        "discord_started": discord_started,
+        "message": "✅ Configuration enregistrée dans .env ! Le moteur Hercule et le bot Discord ont été mis à jour en direct."
+    }
+
 # ----------------- ENDPOINTS CHAT & TASKER -----------------
 
 @app.post("/api/chat", dependencies=[Depends(verify_api_key)])
