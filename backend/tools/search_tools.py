@@ -38,6 +38,7 @@ class SearchTools:
                 "status": "success",
                 "query": query,
                 "count": len(results),
+                "items": results,
                 "results": "\n\n".join(formatted)
             }
         except Exception as e:

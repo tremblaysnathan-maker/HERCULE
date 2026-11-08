@@ -1,14 +1,18 @@
 import os
+import asyncio
 from typing import List, Dict, Any, Optional
 from google import genai
 from google.genai import types
 from backend.config import settings
 from backend.tools.registry import ToolRegistry
 
+
 class GeminiClient:
     """
-    Client d'orchestration pour l'API Google Gemini.
-    Prend en charge Gemini 2.5 Pro, Flash, le Tool Calling natif et la multimodalité.
+    Client d'orchestration asynchrone non-bloquant pour l'API Google Gemini.
+    - Exécution thread-safe non-bloquante (asyncio.to_thread) pour permettre au Swarm Multi-Agents
+      de tourner en parallèle à pleine vitesse.
+    - Auto-Healing & Fallback intelligent de modèles en cas de surcharge ou d'erreur réseau.
     """
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or settings.GEMINI_API_KEY
@@ -36,14 +40,13 @@ class GeminiClient:
         use_tools: bool = True
     ):
         """
-        Génère une réponse avec Gemini en gérant les déclarations d'outils.
+        Génère une réponse avec Gemini de manière 100% asynchrone avec Auto-Healing.
         """
         if not self.client:
             raise ValueError("GEMINI_API_KEY n'est pas configurée dans le fichier .env")
 
         target_model = model_name or settings.GEMINI_PRO_MODEL
 
-        # Configuration des outils
         config_args = {
             "system_instruction": system_instruction,
             "temperature": 0.3,
@@ -55,30 +58,45 @@ class GeminiClient:
 
         config = types.GenerateContentConfig(**config_args)
 
-        # Préparation des contenus au format Gemini
         contents = []
         for msg in messages:
             role = msg.get("role", "user")
             content = msg.get("content", "")
-            
-            # Gestion des rôles Gemini : user / model
             gemini_role = "model" if role in ["model", "assistant"] else "user"
-            
+
             if isinstance(content, str):
                 contents.append(types.Content(
                     role=gemini_role,
                     parts=[types.Part.from_text(text=content)]
                 ))
             elif isinstance(content, list):
-                # Contenu structuré / multi-parts (images, function calls, function responses)
                 contents.append(types.Content(
                     role=gemini_role,
                     parts=content
                 ))
 
-        response = self.client.models.generate_content(
-            model=target_model,
-            contents=contents,
-            config=config
-        )
-        return response
+        # Chaîne d'Auto-Healing (Modèle demandé -> Modèle Flash configuré -> gemini-2.5-flash -> gemini-2.0-flash)
+        fallback_chain = []
+        for m in [target_model, settings.GEMINI_FLASH_MODEL, "gemini-2.5-flash", "gemini-2.0-flash"]:
+            if m and m not in fallback_chain:
+                fallback_chain.append(m)
+
+        last_err = None
+        for candidate_model in fallback_chain:
+            try:
+                response = await asyncio.to_thread(
+                    self.client.models.generate_content,
+                    model=candidate_model,
+                    contents=contents,
+                    config=config
+                )
+                return response
+            except Exception as e:
+                last_err = e
+                err_str = str(e).lower()
+                # Si le modèle n'est pas trouvé ou surchargé, basculer automatiquement sur le suivant
+                if any(k in err_str for k in ["not found", "404", "429", "quota", "unavailable", "503", "overloaded"]):
+                    continue
+                break
+
+        raise last_err

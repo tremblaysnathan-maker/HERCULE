@@ -70,6 +70,13 @@ async def on_startup():
     except Exception as e:
         print(f"[Habit Tracker] Erreur lancement : {e}")
 
+    # 🔄 6. Moteur d'Objectifs Autonomes Continus 24/7
+    try:
+        from backend.services.continuous_goals import continuous_goal_engine
+        asyncio.create_task(continuous_goal_engine.run_continuous_loop())
+    except Exception as e:
+        print(f"[Continuous Goals] Erreur lancement : {e}")
+
 # CORS universel
 app.add_middleware(
     CORSMiddleware,
@@ -412,21 +419,27 @@ async def get_memory_stats():
 
 @app.get("/api/memory/graph")
 async def get_memory_graph():
-    """Renvoie les constellations neuronales de la mémoire pour l'affichage 3D."""
+    """Renvoie les constellations neuronales de la mémoire et du Swarm v3.0 pour l'affichage 3D."""
     profile = memory_manager.profile.data
     nodes = [
-        {"id": "core", "label": "HERCUL CORE", "group": "ai", "size": 25, "color": "#00f0ff"},
-        {"id": "user", "label": profile.get("name", "Nathan"), "group": "user", "size": 20, "color": "#c084fc"},
+        {"id": "core", "label": "HERCUL CORE v3.0", "group": "ai", "size": 26, "color": "#00f0ff"},
+        {"id": "swarm", "label": "Swarm Multi-Agents", "group": "ai", "size": 20, "color": "#ec4899"},
+        {"id": "goals", "label": "Objectifs Continus 24/7", "group": "ai", "size": 18, "color": "#14b8a6"},
+        {"id": "skills", "label": "Skill Forge Auto-Évolutif", "group": "ai", "size": 18, "color": "#eab308"},
+        {"id": "user", "label": profile.get("name", "Opérateur"), "group": "user", "size": 20, "color": "#c084fc"},
         {"id": "workspace", "label": "Google Workspace", "group": "tool", "size": 15, "color": "#3b82f6"},
         {"id": "gmail", "label": "Gmail & Factures", "group": "tool", "size": 12, "color": "#ef4444"},
-        {"id": "calendar", "label": "Agenda Calendar", "group": "tool", "size": 12, "color": "#10b981"},
+        {"id": "calendar", "label": "Agenda & Tasks", "group": "tool", "size": 12, "color": "#10b981"},
         {"id": "deezer", "label": "Deezer Music", "group": "media", "size": 12, "color": "#f59e0b"},
-        {"id": "smarthome", "label": "Maison Connectée", "group": "iot", "size": 12, "color": "#8b5cf6"},
-        {"id": "sentinel", "label": "Sentinelle Cybersécurité", "group": "sec", "size": 12, "color": "#06b6d4"},
-        {"id": "budget", "label": "Budget 2026", "group": "fin", "size": 12, "color": "#22c55e"}
+        {"id": "smarthome", "label": "Maison & Colis", "group": "iot", "size": 12, "color": "#8b5cf6"},
+        {"id": "sentinel", "label": "Guardrails & Vault", "group": "sec", "size": 12, "color": "#06b6d4"},
+        {"id": "budget", "label": "Finance & Budget", "group": "fin", "size": 12, "color": "#22c55e"}
     ]
     links = [
         {"source": "core", "target": "user"},
+        {"source": "core", "target": "swarm"},
+        {"source": "core", "target": "goals"},
+        {"source": "core", "target": "skills"},
         {"source": "core", "target": "workspace"},
         {"source": "workspace", "target": "gmail"},
         {"source": "workspace", "target": "calendar"},
@@ -437,6 +450,24 @@ async def get_memory_graph():
         {"source": "core", "target": "budget"}
     ]
     return {"nodes": nodes, "links": links}
+
+@app.get("/api/swarm/status")
+async def get_swarm_status():
+    """Retourne l'état temps réel de l'escouade Multi-Agents (Hub-and-Spoke)."""
+    from backend.core.swarm_orchestrator import swarm_orchestrator
+    return swarm_orchestrator.get_swarm_status()
+
+@app.get("/api/goals")
+async def get_continuous_goals():
+    """Retourne la liste et la progression des Objectifs Autonomes Continus 24/7."""
+    from backend.services.continuous_goals import continuous_goal_engine
+    return continuous_goal_engine.list_goals()
+
+@app.get("/api/skills")
+async def get_custom_skills():
+    """Retourne le catalogue des compétences auto-forgées et les leçons d'auto-évolution."""
+    from backend.services.skill_creator import skill_forge
+    return skill_forge.list_skills()
 
 # ----------------- TALKIE-WALKIE VOCAL ULTRA-RAPIDE -----------------
 

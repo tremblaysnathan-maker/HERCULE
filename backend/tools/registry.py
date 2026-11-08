@@ -1501,6 +1501,48 @@ class ToolRegistry:
                     },
                     "required": ["filename"]
                 }
+            },
+            {
+                "name": "orchestrate_multi_agent_swarm",
+                "description": "Déploie la véritable escouade Multi-Agents parallèle (Chercheur Web + Architecte + Stratège + Agent Critique de Réflexion) pour accomplir une mission complexe et générer un rapport complet.",
+                "parameters": {
+                    "type": "OBJECT",
+                    "properties": {
+                        "task_goal": {"type": "STRING", "description": "Objectif ou mission complexe à confier à l'escouade multi-agents"}
+                    },
+                    "required": ["task_goal"]
+                }
+            },
+            {
+                "name": "manage_continuous_goals",
+                "description": "Gère les Objectifs Autonomes Continus 24/7 qui travaillent étape par étape en tâche de fond (actions: 'create', 'advance', 'list').",
+                "parameters": {
+                    "type": "OBJECT",
+                    "properties": {
+                        "action": {"type": "STRING", "description": "Action à effectuer : 'create' (créer un objectif), 'advance' (exécuter la prochaine étape immédiatement), ou 'list' (voir la progression)"},
+                        "title": {"type": "STRING", "description": "Titre de l'objectif (si action='create')"},
+                        "details": {"type": "STRING", "description": "Détails de l'objectif (si action='create')"},
+                        "steps_count": {"type": "INTEGER", "description": "Nombre d'étapes (2 à 8, défaut 4)"},
+                        "goal_id": {"type": "STRING", "description": "ID de l'objectif spécifique à avancer (optionnel)"}
+                    },
+                    "required": ["action"]
+                }
+            },
+            {
+                "name": "forge_or_run_custom_skill",
+                "description": "Auto-Évolution : Crée un nouvel outil/compétence Python réutilisable, exécute une compétence existante, liste les compétences ou enregistre une leçon d'auto-amélioration.",
+                "parameters": {
+                    "type": "OBJECT",
+                    "properties": {
+                        "action": {"type": "STRING", "description": "'create' (forger un skill Python), 'execute' (lancer un skill), 'list' (voir le catalogue), ou 'record_lesson' (mémoriser une règle d'auto-amélioration)"},
+                        "skill_name": {"type": "STRING", "description": "Nom de la compétence (ex: 'calcul_rentabilite')"},
+                        "description": {"type": "STRING", "description": "Description de ce que fait la compétence"},
+                        "python_code": {"type": "STRING", "description": "Code Python complet et autonome de la compétence (si action='create')"},
+                        "args_json": {"type": "STRING", "description": "Arguments JSON passés au script (si action='execute')"},
+                        "lesson": {"type": "STRING", "description": "Leçon ou règle d'auto-amélioration à enregistrer (si action='record_lesson')"}
+                    },
+                    "required": ["action"]
+                }
             }
         ]
 
@@ -1948,10 +1990,41 @@ class ToolRegistry:
             # 46. Infrastructure & Multi-Agents
             elif name == "check_infra_health":
                 return infra_manager.check_infra_health()
-            elif name == "orchestrate_subagents":
-                return infra_manager.orchestrate_subagents(
+            elif name in ["orchestrate_subagents", "orchestrate_multi_agent_swarm"]:
+                return await infra_manager.orchestrate_subagents(
                     task_goal=args.get("task_goal", "")
                 )
+            elif name == "manage_continuous_goals":
+                from backend.services.continuous_goals import continuous_goal_engine
+                action = args.get("action", "list").lower()
+                if action == "create":
+                    return await continuous_goal_engine.create_goal(
+                        title=args.get("title", "Objectif Autonome"),
+                        objective_details=args.get("details", ""),
+                        steps_count=int(args.get("steps_count", 4))
+                    )
+                elif action in ["advance", "next", "execute"]:
+                    return await continuous_goal_engine.execute_next_step(goal_id=args.get("goal_id"))
+                else:
+                    return continuous_goal_engine.list_goals()
+            elif name == "forge_or_run_custom_skill":
+                from backend.services.skill_creator import skill_forge
+                action = args.get("action", "list").lower()
+                if action == "create":
+                    return skill_forge.create_skill(
+                        skill_name=args.get("skill_name", "custom_skill"),
+                        description=args.get("description", "Compétence personnalisée"),
+                        python_code=args.get("python_code", "")
+                    )
+                elif action in ["execute", "run"]:
+                    return skill_forge.execute_skill(
+                        skill_name=args.get("skill_name", ""),
+                        args_json=args.get("args_json", "{}")
+                    )
+                elif action == "record_lesson":
+                    return skill_forge.record_lesson(lesson=args.get("lesson", ""))
+                else:
+                    return skill_forge.list_skills()
 
             # 47. Hub Ultime (Todoist, LBC, Flights, Trafic, Otter, Plaid, OCR, TripIt)
             elif name == "breakdown_goal_into_tasks":

@@ -13,12 +13,36 @@ Il allie la puissance de réflexion de **Google Gemini** à une suite d'outils c
 
 ---
 
-## 🌟 Fonctionnalités Principales
+## 🌟 Fonctionnalités Principales (v3.0 — Architecture Multi-Agents Continue)
 
-### 🧠 Cerveau Hybride & Optimisation de Tokens
-* **Double Moteur Gemini** :
+```mermaid
+flowchart TD
+    User["👤 Opérateur (Discord / Web / Tasker)"] --> Guard["🛡️ Local Guardrails (<5ms)"]
+    Guard --> Core["🧠 HERCUL CORE v3.0 (Hub Orchestrator)"]
+    Core --> Swarm["🐝 Swarm Multi-Agents Parallèle (asyncio.gather)"]
+    Swarm --> R["🕵️ Agent Chercheur (Web Live)"]
+    Swarm --> A["💻 Agent Architecte (Code & Structure)"]
+    Swarm --> S["📊 Agent Stratège (LifeOps & Plan)"]
+    R & A & S --> C["🛡️ Agent Critique (Reflection Loop)"]
+    Core --> Goals["🔄 Moteur d'Objectifs Continus 24/7"]
+    Core --> Forge["🧬 Skill Forge Auto-Évolutif (Python AST + Soul Memory)"]
+```
+
+### 🐝 1. Escouade Multi-Agents Asynchrone ("Hub-and-Spoke Swarm + Reflection Loop")
+* Inspiré des architectures de pointe (*LangGraph Open Deep Research*, *Meta Muse*, *Hermes Agent*).
+* Déploie **en parallèle (`asyncio.gather`)** 3 sous-agents spécialisés (🕵️ **Chercheur Web**, 💻 **Architecte Builder**, 📊 **Stratège LifeOps**), suivis d'un 4ème **🛡️ Agent Critique (Reflection Loop)** qui vérifie les faits, corrige les angles morts et génère un rapport Markdown certifié dans `/workspace/swarm_reports/`.
+
+### 🔄 2. Moteur d'Objectifs Autonomes Continus 24/7 ("Continuous Goal Engine")
+* Ne s'endort jamais après un message : confiez-lui un objectif de fond, il le découpe en étapes séquentielles, travaille dessus **en tâche de fond 24h/24**, sauvegarde les livrables dans `/workspace/goals/` et vous notifie sur Discord à chaque étape accomplie.
+
+### 🧬 3. Auto-Évolution & Forge de Compétences Dynamiques ("Dynamic Skill Forge")
+* Hercul peut **coder, compiler (validation AST), enregistrer et exécuter ses propres nouveaux outils Python à la volée** dans `/workspace/custom_skills/`.
+* **Mémoire Procédurale (`Soul Lessons`)** : Mémorise ses leçons d'auto-amélioration et les réinjecte automatiquement dans sa conscience système.
+
+### 🧠 4. Cerveau Hybride, Auto-Healing & Optimisation de Tokens
+* **Double Moteur Gemini Non-Bloquant** :
   * `gemini-3.5-flash-lite` : Réponses instantanées pour les salutations et les discussions légères.
-  * `gemini-3.7-flash` : Raisonnement approfondi, orchestration d'outils (Function Calling) et planification.
+  * `gemini-3.7-flash` : Raisonnement approfondi, orchestration des 51 outils (Function Calling) et supervision du Swarm, avec **Auto-Healing** (bascule automatique de modèle en cas de surcharge).
 * **Token Optimizer** : Désactivation intelligente des outils sur les messages simples et compression automatique des résultats d'outils (`< 1500 chars`) pour diviser drastiquement la consommation de tokens.
 * **Mémoire Totale (ChromaDB & Profil)** : Mémorisation sémantique permanente de vos préférences, projets et habitudes sans polluer le contexte actif.
 

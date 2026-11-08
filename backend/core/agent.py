@@ -8,12 +8,17 @@ from backend.memory.memory_manager import MemoryManager
 from backend.memory.token_optimizer import TokenOptimizer
 from backend.tools.registry import ToolRegistry
 from backend.services.scheduler import scheduler
+from backend.services.guardrails import guardrails_service
+from backend.services.skill_creator import skill_forge
+
 
 class HerculAgent:
     """
-    Moteur autonome ReAct pour Hercul.
+    Moteur autonome ReAct & Multi-Agents pour Hercul v3.0.
     - Synchronisation temporelle temps réel (Europe/Paris)
-    - Exécution proactive d'outils
+    - Filtrage de sécurité Guardrails (<5ms)
+    - Mémoire procédurale & Auto-évolution (Skill Forge)
+    - Exécution proactive d'outils et du Swarm Multi-Agents
     - Optimisation de tokens maximale
     """
     def __init__(self, memory_manager: Optional[MemoryManager] = None):
@@ -27,15 +32,33 @@ class HerculAgent:
         fast_mode: bool = False,
         model_override: Optional[str] = None
     ) -> Dict[str, Any]:
+        # 0. Garde-Fou Local (<5ms) : Détection d'injections & Urgence
+        guard_check = guardrails_service.inspect_text(message)
+        if not guard_check.get("is_safe", True):
+            return {
+                "response": "🛡️ **Garde-Fou Hercul :** Cette requête contient une tentative d'injection système non autorisée et a été bloquée.",
+                "session_id": session_id,
+                "model_used": "local_guardrail",
+                "tools_executed": [],
+                "estimated_context_tokens": 0
+            }
+
         # 1. Récupération de l'heure et date réelles de France (Europe/Paris)
         time_info = scheduler.get_current_time_details()
-        time_header = f"### Contexte Temporel Actuel (France / Europe/Paris) :\n- Date : {time_info['date']}\n- Heure exacte : {time_info['time']} ({time_info['hour_minute']})"
+        time_header = (
+            f"### Contexte Temporel Actuel (France / Europe/Paris) :\n"
+            f"- Date : {time_info['date']}\n"
+            f"- Heure exacte : {time_info['time']} ({time_info['hour_minute']})"
+        )
 
-        # 2. Contexte calibré et mémoire
+        # 2. Contexte calibré, mémoire vectorielle & mémoire procédurale auto-évolutive
         context_data = self.memory.build_context_for_prompt(session_id=session_id, user_query=message)
-        
+        procedural_ctx = skill_forge.get_procedural_context_for_prompt()
+
         system_prompt = HERCUL_SYSTEM_INSTRUCTION if not fast_mode else TASKER_FAST_INSTRUCTION
         full_system_instruction = f"{system_prompt}\n\n{time_header}\n\n{context_data['profile_context']}"
+        if procedural_ctx:
+            full_system_instruction += f"\n\n{procedural_ctx}"
         if context_data['relevant_memories_context']:
             full_system_instruction += f"\n\n{context_data['relevant_memories_context']}"
 
@@ -45,7 +68,6 @@ class HerculAgent:
         # 3. Routage Intelligent des Outils & Modèles
         enable_tools = TokenOptimizer.should_enable_tools(message) if not fast_mode else False
 
-        # Flash-Lite ultra-léger et instantané pour les discussions simples, Flash standard pour les outils
         if model_override:
             selected_model = model_override
         elif not enable_tools or fast_mode:
@@ -54,7 +76,7 @@ class HerculAgent:
             selected_model = settings.GEMINI_FLASH_MODEL
 
         tools_executed = []
-        max_turns = 4
+        max_turns = 5
         current_turn = 0
         final_answer = ""
 
@@ -88,7 +110,7 @@ class HerculAgent:
             for fc in function_calls:
                 tool_name = fc.name
                 tool_args = dict(fc.args) if fc.args else {}
-                
+
                 # Injection de l'user_id pour les rappels si session Discord
                 if tool_name == "set_timer_or_reminder" and session_id.startswith("discord_"):
                     tool_args["user_id"] = session_id.replace("discord_", "")
@@ -124,7 +146,7 @@ class HerculAgent:
                 "content": function_response_parts
             })
 
-        # 4. Synthèse de secours humaine intelligente si final_answer est vide ou générique
+        # 5. Synthèse de secours humaine intelligente si final_answer est vide ou générique
         if not final_answer or final_answer.strip() in ["", "Action effectuée avec succès.", "Action accomplie."]:
             if tools_executed:
                 last_tool = tools_executed[-1]
@@ -138,9 +160,9 @@ class HerculAgent:
             else:
                 final_answer = "Action effectuée avec succès."
 
-        # 5. Enregistrement & consolidation silencieuse
+        # 6. Enregistrement & consolidation silencieuse
         self.memory.add_to_session(session_id=session_id, role="assistant", content=final_answer)
-        
+
         asyncio.create_task(
             self.memory.consolidate_memory(
                 session_id=session_id,
@@ -154,5 +176,6 @@ class HerculAgent:
             "session_id": session_id,
             "model_used": selected_model,
             "tools_executed": tools_executed,
+            "urgency": guard_check.get("urgency_level", "Normal"),
             "estimated_context_tokens": context_data["estimated_context_tokens"]
         }
