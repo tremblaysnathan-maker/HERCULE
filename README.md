@@ -107,7 +107,7 @@ hercul/
 
 ### 1. Cloner le dépôt
 ```bash
-git clone https://github.com/VOTRE_NOM/HERCULE.git
+git clone https://github.com/tremblaysnathan-maker/HERCULE.git
 cd HERCULE
 ```
 
