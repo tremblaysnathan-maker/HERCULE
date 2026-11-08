@@ -1,0 +1,59 @@
+# ==============================================================================
+# FICHIERS ET SECRETS CRITIQUES (NE JAMAIS COMMITER DANS GIT)
+# ==============================================================================
+.env
+.env.*
+*.env
+!*.env.example
+
+# Clés et certificats OAuth Google
+*client_secret*.json
+google_credentials.json
+google_token.json
+data/google_credentials.json
+data/google_token.json
+data/*.json
+!data/.gitkeep
+!google_credentials.example.json
+
+# Données persistantes locales et vectorielles
+data/chroma/
+data/screenshots/
+data/vault/
+data/memory/
+data/temp/
+data/recordings/
+data/cache/
+workspace/*
+!workspace/.gitkeep
+
+# Fichiers Python compilés et caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Fichiers d'environnement virtuel
+venv/
+.venv/
+env/
+ENV/
+
+# Logs et diagnostics
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+
+# Fichiers d'éditeurs et systèmes d'exploitation
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini

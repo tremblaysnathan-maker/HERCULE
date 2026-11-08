@@ -1,0 +1,43 @@
+# Framework API & Serveur
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.8.0
+pydantic-settings>=2.4.0
+python-dotenv>=1.0.1
+httpx>=0.27.0
+aiofiles>=24.1.0
+
+# Intelligence & LLM (Google Gemini SDK officiel)
+google-genai>=1.0.0
+
+# Google Workspace & APIs Google (Docs, Sheets, Drive, Gmail, Calendar, Tasks)
+google-api-python-client>=2.140.0
+google-auth-httplib2>=0.2.0
+google-auth-oauthlib>=1.2.1
+
+# Mémoire & RAG
+chromadb>=0.5.5
+tiktoken>=0.7.0
+
+# Outils Web & Contrôle Navigateur
+playwright>=1.46.0
+duckduckgo-search>=6.2.0
+beautifulsoup4>=4.12.3
+
+# Synthèse Vocale Humaine Ultra-Réaliste (Neural TTS)
+edge-tts>=6.1.12
+
+# Bot Discord (Messages Privés)
+discord.py>=2.3.2
+
+# Traitement d'Images & Documents
+pillow>=10.0.0
+pypdf>=4.3.0
+
+# Super-Pouvoirs : YouTube, Sentinelle, Planificateur
+youtube-transcript-api>=0.6.2
+psutil>=6.0.0
+apscheduler>=3.10.4
+
+# Utilitaires
+colorama>=0.4.6

@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HERCUL - Holographic Neural Core</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #02040a;
+      --arc-cyan: #00f0ff;
+      --arc-blue: #0088ff;
+      --arc-glow: rgba(0, 240, 255, 0.4);
+      --arc-gold: #fbbf24;
+      --arc-purple: #c084fc;
+      
+      --glass-bg: rgba(6, 11, 25, 0.75);
+      --glass-border: rgba(0, 240, 255, 0.25);
+      --text-bright: #ffffff;
+      --text-dim: #94a3b8;
+      
+      --font-display: 'Orbitron', -apple-system, sans-serif;
+      --font-ui: 'Rajdhani', -apple-system, sans-serif;
+      --font-code: 'JetBrains Mono', monospace;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-bright);
+      font-family: var(--font-ui), system-ui, sans-serif;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* 1. CANEVAS 3D */
+    #canvas-container {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      background: radial-gradient(circle at 50% 48%, #06152d 0%, #02040a 100%);
+    }
+
+    /* 2. BARRE SUPÉRIEURE (CAPSULE COURBÉE FLOTTANTE) */
+    .top-capsule {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 50px;
+      padding: 8px 24px;
+      box-shadow: 0 0 30px rgba(0, 240, 255, 0.15);
+    }
+
+    .brand-cluster {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .arc-emblem {
+      width: 36px;
+      height: 36px;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.3) 0%, rgba(0,0,0,0.8) 100%);
+      border: 1.5px solid var(--arc-cyan);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 15px var(--arc-glow);
+      position: relative;
+    }
+
+    .emblem-inner-tri {
+      width: 12px;
+      height: 12px;
+      border: 1.5px solid var(--arc-cyan);
+      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+      background: rgba(0, 240, 255, 0.6);
+      animation: spin-tri 8s linear infinite;
+    }
+
+    @keyframes spin-tri {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      color: var(--arc-cyan);
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+    }
+
+    .telemetry-pills {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .stat-pill {
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-pill strong {
+      color: var(--arc-cyan);
+      font-family: var(--font-code);
+      font-size: 0.82rem;
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse-ring 1.8s infinite;
+    }
+
+    @keyframes pulse-ring {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.8); }
+    }
+
+    .top-tools {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pill-btn {
+      background: rgba(0, 240, 255, 0.12);
+      border: 1px solid var(--arc-cyan);
+      color: var(--arc-cyan);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .pill-btn:hover {
+      background: rgba(0, 240, 255, 0.25);
+      box-shadow: 0 0 15px var(--arc-glow);
+    }
+
+    .pill-btn.muted {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+
+    .key-pill {
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-family: var(--font-code);
+      font-size: 0.75rem;
+      width: 110px;
+      outline: none;
+      text-align: center;
+    }
+
+    .key-pill:focus {
+      border-color: var(--arc-cyan);
+      box-shadow: 0 0 10px var(--arc-glow);
+    }
+
+    /* 3. CONTRÔLES HOLOGRAPHIQUES DU RÉACTEUR (GAUCHE) */
+    .reactor-modes {
+      position: fixed;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 14px 10px;
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.15);
+    }
+
+    .mode-btn {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-dim);
+      padding: 10px 16px;
+      border-radius: 16px;
+      font-family: var(--font-ui);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.25s ease;
+    }
+
+    .mode-btn:hover, .mode-btn.active {
+      background: rgba(0, 240, 255, 0.18);
+      border-color: var(--arc-cyan);
+      color: var(--arc-cyan);
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+      transform: translateX(4px);
+    }
+
+    /* 4. INSPECTEUR HOLOGRAPHIQUE COURBÉ (DROITE) */
+    .hologram-card {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 380px;
+      max-height: calc(100vh - 180px);
+      z-index: 100;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--arc-purple);
+      border-radius: 20px;
+      box-shadow: 0 0 35px rgba(192, 132, 252, 0.25);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: appear 0.3s ease-out;
+    }
+
+    @keyframes appear {
+      from { opacity: 0; transform: translateY(-50%) translateX(20px); }
+      to { opacity: 1; transform: translateY(-50%) translateX(0); }
+    }
+
+    .hologram-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      background: rgba(192, 132, 252, 0.15);
+      border-bottom: 1px solid rgba(192, 132, 252, 0.3);
+    }
+
+    .hologram-title {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--arc-purple);
+      letter-spacing: 0.08em;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
+
+    .close-btn:hover {
+      color: #fff;
+    }
+
+    .hologram-body {
+      padding: 18px;
+      overflow-y: auto;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .sub-card {
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 12px 16px;
+      border-radius: 12px;
+    }
+
+    .sub-card h4 {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      color: var(--arc-cyan);
+      margin-bottom: 6px;
+    }
+
+    /* 5. CAPSULE DE CHAT & COMMANDE (BAS) */
+    .bottom-capsule {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(880px, 94vw);
+      z-index: 100;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      box-shadow: 0 0 40px rgba(0, 240, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .bottom-capsule.collapsed {
+      height: 52px;
+    }
+
+    .capsule-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 22px;
+      background: rgba(0, 240, 255, 0.08);
+      border-bottom: 1px solid var(--glass-border);
+      cursor: pointer;
+    }
+
+    .capsule-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--arc-cyan);
+      letter-spacing: 0.1em;
+    }
+
+    .core-sparkle {
+      width: 10px;
+      height: 10px;
+      background: var(--arc-cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 12px var(--arc-cyan);
+      animation: pulse-ring 1.2s infinite;
+    }
+
+    .capsule-tools {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .clean-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-dim);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      cursor: pointer;
+    }
+
+    .collapse-arrow {
+      color: var(--arc-cyan);
+      font-size: 0.85rem;
+      transition: transform 0.3s;
+    }
+
+    .bottom-capsule.collapsed .collapse-arrow {
+      transform: rotate(180deg);
+    }
+
+    .capsule-drawer {
+      display: flex;
+      flex-direction: column;
+      height: 250px;
+    }
+
+    .dialogue-stream {
+      flex-grow: 1;
+      padding: 16px 22px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      user-select: text;
+    }
+
+    .dialogue-bubble {
+      padding: 10px 16px;
+      border-radius: 14px;
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    .dialogue-bubble.user {
+      align-self: flex-end;
+      background: rgba(0, 136, 255, 0.25);
+      border: 1px solid rgba(0, 136, 255, 0.45);
+      border-bottom-right-radius: 4px;
+      max-width: 85%;
+    }
+
+    .dialogue-bubble.assistant {
+      align-self: flex-start;
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      border-bottom-left-radius: 4px;
+      max-width: 90%;
+    }
+
+    .bubble-speaker {
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--arc-cyan);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .dialogue-bubble.user .bubble-speaker {
+      color: #60a5fa;
+    }
+
+    .action-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(251, 191, 36, 0.15);
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      color: var(--arc-gold);
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      font-family: var(--font-code);
+    }
+
+    .input-dock {
+      padding: 10px 18px;
+      background: rgba(0, 0, 0, 0.6);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    #chat-form {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .mic-button {
+      width: 42px;
+      height: 42px;
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--arc-cyan);
+      border-radius: 50%;
+      font-size: 1.15rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .mic-button:hover {
+      background: rgba(0, 240, 255, 0.25);
+      box-shadow: 0 0 15px var(--arc-glow);
+    }
+
+    .mic-button.listening {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: #ef4444;
+      box-shadow: 0 0 15px #ef4444;
+    }
+
+    .mission-input {
+      flex-grow: 1;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 20px;
+      font-family: var(--font-ui);
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .mission-input:focus {
+      border-color: var(--arc-cyan);
+      box-shadow: 0 0 10px var(--arc-glow);
+    }
+
+    .execute-btn {
+      background: var(--arc-cyan);
+      color: #02040a;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 20px;
+      font-family: var(--font-display);
+      font-size: 0.78rem;
+      font-weight: 900;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.08em;
+    }
+
+    .execute-btn:hover {
+      box-shadow: 0 0 20px var(--arc-cyan);
+      transform: translateY(-1px);
+    }
+
+    /* 6. ONDES VOCALES VIVIENNE NEURAL */
+    .audio-visualizer {
+      position: fixed;
+      bottom: 335px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 150;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(6, 11, 25, 0.85);
+      padding: 8px 20px;
+      border-radius: 30px;
+      border: 1px solid var(--arc-cyan);
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.4);
+    }
+
+    .sound-bar {
+      width: 4px;
+      height: 16px;
+      background: var(--arc-cyan);
+      border-radius: 2px;
+      animation: sound-wave 1s infinite ease-in-out;
+    }
+
+    .sound-bar:nth-child(2) { animation-delay: 0.15s; }
+    .sound-bar:nth-child(3) { animation-delay: 0.3s; }
+    .sound-bar:nth-child(4) { animation-delay: 0.45s; }
+
+    @keyframes sound-wave {
+      0%, 100% { height: 6px; }
+      50% { height: 26px; }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CANEVAS 3D ARC REACTOR -->
+  <div id="canvas-container"></div>
+
+  <!-- 1. CAPSULE DE TÉLÉMÉTRIE (HAUT) -->
+  <header class="top-capsule">
+    <div class="brand-cluster">
+      <div class="arc-emblem">
+        <div class="emblem-inner-tri"></div>
+      </div>
+      <span class="brand-title">HERCUL CORE</span>
+    </div>
+
+    <div class="telemetry-pills">
+      <div class="stat-pill">
+        <span>RÉACTEUR :</span>
+        <strong style="color:#10b981"><span class="pulse-dot"></span> 100% STABLE</strong>
+      </div>
+      <div class="stat-pill">
+        <span>SOUVENIRS :</span>
+        <strong id="hud-memory-count" style="color:#c084fc">0</strong>
+      </div>
+      <div class="stat-pill">
+        <span>VOIX HD :</span>
+        <strong style="color:#00f0ff">Vivienne Neural</strong>
+      </div>
+    </div>
+
+    <div class="top-tools">
+      <a href="/api/google/login" target="_blank" class="pill-btn" style="text-decoration:none" title="Connecter Gmail, Calendar et Drive">
+        <span>🌐</span> GOOGLE CONNECT
+      </a>
+      <button id="tts-hud-btn" class="pill-btn" title="Activer / Couper la voix humaine">
+        <span>🔊</span> VOIX ACTIVE
+      </button>
+      <input type="password" id="secret-key-input" class="key-pill" placeholder="Clé VPS..." title="Clé API">
+    </div>
+  </header>
+
+  <!-- 2. MODES HOLOGRAPHIQUES DU RÉACTEUR (GAUCHE) -->
+  <nav class="reactor-modes">
+    <button class="mode-btn active" data-mode="overview">🔮 Réacteur Global</button>
+    <button class="mode-btn" data-mode="core">⚡ Noyau d'Énergie (Action)</button>
+    <button class="mode-btn" data-mode="coils">🧠 Anneaux Synaptiques (Mémoire)</button>
+    <button class="mode-btn" data-mode="optics">🌐 Lentille Optique (Web & Vision)</button>
+    <button class="mode-btn" data-mode="relay">📱 Relais Mobile (Tasker)</button>
+  </nav>
+
+  <!-- 3. INSPECTEUR HOLOGRAPHIQUE (DROITE) -->
+  <aside id="node-inspector" class="hologram-card hidden">
+    <div class="hologram-header">
+      <h3 id="inspector-title">DONNÉES HOLOGRAPHIQUES</h3>
+      <button id="close-inspector-btn" class="close-btn">&times;</button>
+    </div>
+    <div class="hologram-body" id="inspector-content"></div>
+  </aside>
+
+  <!-- 4. CAPSULE DE CHAT & MISSION (BAS) -->
+  <section class="bottom-capsule" id="bottom-capsule">
+    <div class="capsule-top" id="capsule-toggle">
+      <div class="capsule-label">
+        <span class="core-sparkle"></span>
+        <span>CONSOLE D'EXÉCUTION HERCUL</span>
+      </div>
+      <div class="capsule-tools">
+        <button id="clear-chat-btn" class="clean-btn">Effacer</button>
+        <span class="collapse-arrow" id="collapse-arrow">▼</span>
+      </div>
+    </div>
+
+    <div class="capsule-drawer" id="capsule-drawer">
+      <div class="dialogue-stream" id="messages-container">
+        <div class="dialogue-bubble assistant">
+          <span class="bubble-speaker">HERCUL :</span>
+          <div class="msg-content">Réacteur Holographique en ligne. Voix humaine Vivienne Neural prête. Vous pouvez interagir avec le modèle 3D à la souris ou me donner une mission.</div>
+        </div>
+      </div>
+
+      <div class="input-dock">
+        <form id="chat-form">
+          <button type="button" id="mic-btn" class="mic-button" title="Parler à Hercul">
+            <span>🎙️</span>
+          </button>
+          <input type="text" id="user-input" class="mission-input" placeholder="Donnez une mission ou posez une question à Hercul..." autocomplete="off">
+          <button type="submit" id="send-btn" class="execute-btn">EXÉCUTER</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. ONDES VOCALES -->
+  <div id="voice-waves" class="audio-visualizer hidden">
+    <span class="sound-bar"></span>
+    <span class="sound-bar"></span>
+    <span class="sound-bar"></span>
+    <span class="sound-bar"></span>
+    <span style="font-size:0.75rem;color:#00f0ff;margin-left:6px;font-weight:700;font-family:'Orbitron',monospace">HERCUL S'EXPRIME...</span>
+  </div>
+
+  <!-- SCRIPT DU RÉACTEUR HOLOGRAPHIQUE 3D & VOIX VIVIENNE -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const container = document.getElementById('canvas-container');
+      const chatForm = document.getElementById('chat-form');
+      const userInput = document.getElementById('user-input');
+      const messagesContainer = document.getElementById('messages-container');
+      const clearChatBtn = document.getElementById('clear-chat-btn');
+      const secretKeyInput = document.getElementById('secret-key-input');
+      const ttsHudBtn = document.getElementById('tts-hud-btn');
+      const micBtn = document.getElementById('mic-btn');
+      const capsuleToggle = document.getElementById('capsule-toggle');
+      const bottomCapsule = document.getElementById('bottom-capsule');
+      const voiceWaves = document.getElementById('voice-waves');
+
+      const hudMemoryCount = document.getElementById('hud-memory-count');
+      const nodeInspector = document.getElementById('node-inspector');
+      const inspectorTitle = document.getElementById('inspector-title');
+      const inspectorContent = document.getElementById('inspector-content');
+      const closeInspectorBtn = document.getElementById('close-inspector-btn');
+      const modeBtns = document.querySelectorAll('.mode-btn');
+
+      let ttsEnabled = true;
+      let currentAudio = null;
+      let isSpeaking = false;
+      let isListening = false;
+      let recognition = null;
+
+      // Clé secrète persistante
+      const savedKey = localStorage.getItem('hercul_api_key') || '';
+      secretKeyInput.value = savedKey;
+      secretKeyInput.addEventListener('input', () => {
+        localStorage.setItem('hercul_api_key', secretKeyInput.value.trim());
+        fetchTelemetry();
+      });
+
+      function getHeaders() {
+        return {
+          'Content-Type': 'application/json',
+          'X-Hercul-Key': secretKeyInput.value.trim()
+        };
+      }
+
+      capsuleToggle.addEventListener('click', (e) => {
+        if (e.target.id === 'clear-chat-btn') return;
+        bottomCapsule.classList.toggle('collapsed');
+      });
+
+      clearChatBtn.addEventListener('click', () => {
+        messagesContainer.innerHTML = '';
+      });
+
+      closeInspectorBtn.addEventListener('click', () => {
+        nodeInspector.classList.add('hidden');
+      });
+
+      // =================================================================
+      // 🔮 RÉACTEUR HOLOGRAPHIQUE 3D D'ÉLITE (THREE.JS)
+      // =================================================================
+
+      let scene, camera, renderer;
+      let reactorGroup, outerChassis, innerCoreGroup, coilGroup, laserReticle1, laserReticle2, centralPrism;
+      let spherical = { radius: 34, theta: 0, phi: Math.PI / 2.3 };
+      let isDragging = false;
+      let prevMousePos = { x: 0, y: 0 };
+
+      function initThree() {
+        if (!window.THREE) return;
+
+        scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x02040a, 0.02);
+
+        camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+        updateCam();
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // Lumières haute brillance
+        scene.add(new THREE.AmbientLight(0x00f0ff, 0.5));
+
+        const coreLight = new THREE.PointLight(0x00f0ff, 3.5, 60);
+        coreLight.position.set(0, 0, 5);
+        scene.add(coreLight);
+
+        const goldLight = new THREE.PointLight(0xfbbf24, 2.0, 50);
+        goldLight.position.set(10, 10, 10);
+        scene.add(goldLight);
+
+        // 1. Fond stellaire subtil
+        createStarfield();
+
+        // 2. Construction du Réacteur Arc / Cœur IA
+        createArcReactor();
+
+        // Événements
+        setupMouse();
+        window.addEventListener('resize', onResize);
+      }
+
+      function updateCam() {
+        camera.position.x = spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
+        camera.position.y = spherical.radius * Math.cos(spherical.phi);
+        camera.position.z = spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
+        camera.lookAt(0, 0, 0);
+      }
+
+      function setupMouse() {
+        window.addEventListener('mousedown', (e) => {
+          if (e.target.closest('.top-capsule') || e.target.closest('.bottom-capsule') || e.target.closest('.hologram-card') || e.target.closest('.reactor-modes')) return;
+          isDragging = true;
+          prevMousePos = { x: e.clientX, y: e.clientY };
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          if (!isDragging) return;
+          const dx = e.clientX - prevMousePos.x;
+          const dy = e.clientY - prevMousePos.y;
+
+          spherical.theta -= dx * 0.0055;
+          spherical.phi -= dy * 0.0055;
+          spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+
+          prevMousePos = { x: e.clientX, y: e.clientY };
+          updateCam();
+        });
+
+        window.addEventListener('mouseup', () => { isDragging = false; });
+
+        window.addEventListener('wheel', (e) => {
+          if (e.target.closest('.dialogue-stream') || e.target.closest('.hologram-body')) return;
+          spherical.radius += e.deltaY * 0.035;
+          spherical.radius = Math.max(10, Math.min(70, spherical.radius));
+          updateCam();
+        });
+      }
+
+      function createStarfield() {
+        const geo = new THREE.BufferGeometry();
+        const count = 1000;
+        const pos = new Float32Array(count * 3);
+        for (let i = 0; i < count * 3; i += 3) {
+          pos[i] = (Math.random() - 0.5) * 220;
+          pos[i + 1] = (Math.random() - 0.5) * 220;
+          pos[i + 2] = (Math.random() - 0.5) * 220;
+        }
+        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        const mat = new THREE.PointsMaterial({ color: 0x00f0ff, size: 0.5, transparent: true, opacity: 0.4 });
+        scene.add(new THREE.Points(geo, mat));
+      }
+
+      /**
+       * Modélisation ultra-précise de l'Arc Reactor / Cœur Holographique
+       */
+      function createArcReactor() {
+        reactorGroup = new THREE.Group();
+
+        // 1. Châssis métallique externe circulaire
+        const chassisGeo = new THREE.TorusGeometry(10.5, 0.6, 24, 100);
+        const chassisMat = new THREE.MeshStandardMaterial({
+          color: 0x1e293b,
+          metalness: 0.9,
+          roughness: 0.2,
+          emissive: 0x00f0ff,
+          emissiveIntensity: 0.15
+        });
+        outerChassis = new THREE.Mesh(chassisGeo, chassisMat);
+        reactorGroup.add(outerChassis);
+
+        // 2. Bobines d'induction en cuivre (10 blocs entourant le réacteur)
+        coilGroup = new THREE.Group();
+        const numCoils = 10;
+        for (let i = 0; i < numCoils; i++) {
+          const angle = (i / numCoils) * Math.PI * 2;
+          const coilGeo = new THREE.BoxGeometry(1.6, 1.0, 1.4);
+          const coilMat = new THREE.MeshStandardMaterial({
+            color: 0xd97706, // Cuivre
+            metalness: 0.8,
+            roughness: 0.3,
+            emissive: 0xd97706,
+            emissiveIntensity: 0.3
+          });
+          const coil = new THREE.Mesh(coilGeo, coilMat);
+          coil.position.set(Math.cos(angle) * 10.5, Math.sin(angle) * 10.5, 0);
+          coil.rotation.z = angle + Math.PI / 2;
+          coilGroup.add(coil);
+
+          // LED lumineuse sur chaque bobine
+          const ledGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.8, 12);
+          const ledMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
+          const led = new THREE.Mesh(ledGeo, ledMat);
+          led.position.set(Math.cos(angle) * 9.2, Math.sin(angle) * 9.2, 0.2);
+          led.rotation.z = angle;
+          coilGroup.add(led);
+        }
+        reactorGroup.add(coilGroup);
+
+        // 3. Anneaux intérieurs mécaniques étagés (Rotatifs)
+        innerCoreGroup = new THREE.Group();
+        
+        // Anneau intermédiaire avec fentes
+        const ringGeo1 = new THREE.RingGeometry(6.8, 8.4, 60);
+        const ringMat1 = new THREE.MeshStandardMaterial({
+          color: 0x0f172a,
+          metalness: 0.95,
+          roughness: 0.1,
+          side: THREE.DoubleSide
+        });
+        const ringMesh1 = new THREE.Mesh(ringGeo1, ringMat1);
+        innerCoreGroup.add(ringMesh1);
+
+        // Anneau lumineux interne
+        const ringGlowGeo = new THREE.TorusGeometry(6.4, 0.15, 16, 80);
+        const ringGlowMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.8 });
+        const ringGlow = new THREE.Mesh(ringGlowGeo, ringGlowMat);
+        innerCoreGroup.add(ringGlow);
+
+        reactorGroup.add(innerCoreGroup);
+
+        // 4. Réticules holographiques laser (Style HUD Iron Man)
+        const reticleGeo1 = new THREE.RingGeometry(4.2, 4.4, 6, 1);
+        const reticleMat1 = new THREE.MeshBasicMaterial({ color: 0x00f0ff, wireframe: true, transparent: true, opacity: 0.7 });
+        laserReticle1 = new THREE.Mesh(reticleGeo1, reticleMat1);
+        laserReticle1.position.z = 0.5;
+        reactorGroup.add(laserReticle1);
+
+        const reticleGeo2 = new THREE.TorusGeometry(3.2, 0.04, 16, 60);
+        const reticleMat2 = new THREE.MeshBasicMaterial({ color: 0xc084fc, transparent: true, opacity: 0.6 });
+        laserReticle2 = new THREE.Mesh(reticleGeo2, reticleMat2);
+        laserReticle2.position.z = 0.8;
+        reactorGroup.add(laserReticle2);
+
+        // 5. Prisme Central Triangulaire (Cœur énergétique)
+        const prismGeo = new THREE.CylinderGeometry(2.4, 2.4, 0.8, 3);
+        const prismMat = new THREE.MeshStandardMaterial({
+          color: 0x00f0ff,
+          emissive: 0x00f0ff,
+          emissiveIntensity: 0.85,
+          metalness: 0.2,
+          roughness: 0.1,
+          transparent: true,
+          opacity: 0.85
+        });
+        centralPrism = new THREE.Mesh(prismGeo, prismMat);
+        centralPrism.rotation.x = Math.PI / 2;
+        centralPrism.position.z = 0.2;
+        reactorGroup.add(centralPrism);
+
+        // 6. Nuage de particules plasma holographiques (2000 points)
+        const partCount = 2000;
+        const partGeo = new THREE.BufferGeometry();
+        const partPos = new Float32Array(partCount * 3);
+        const partCol = new Float32Array(partCount * 3);
+
+        for (let i = 0; i < partCount; i++) {
+          const idx = i * 3;
+          const r = Math.random() * 8.5;
+          const theta = Math.random() * Math.PI * 2;
+          const z = (Math.random() - 0.5) * 3.5;
+
+          partPos[idx] = Math.cos(theta) * r;
+          partPos[idx + 1] = Math.sin(theta) * r;
+          partPos[idx + 2] = z;
+
+          if (r < 3) {
+            partCol[idx] = 0.0; partCol[idx+1] = 0.94; partCol[idx+2] = 1.0;
+          } else {
+            partCol[idx] = 0.75; partCol[idx+1] = 0.5; partCol[idx+2] = 0.98;
+          }
+        }
+
+        partGeo.setAttribute('position', new THREE.BufferAttribute(partPos, 3));
+        partGeo.setAttribute('color', new THREE.BufferAttribute(partCol, 3));
+
+        const partMat = new THREE.PointsMaterial({
+          size: 0.25,
+          vertexColors: true,
+          transparent: true,
+          opacity: 0.85,
+          blending: THREE.AdditiveBlending
+        });
+        const particles = new THREE.Points(partGeo, partMat);
+        reactorGroup.add(particles);
+
+        scene.add(reactorGroup);
+      }
+
+      function onResize() {
+        if (!camera || !renderer) return;
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const time = performance.now() * 0.001;
+
+        if (reactorGroup) {
+          // Rotation mécanique douce
+          reactorGroup.rotation.z = Math.sin(time * 0.2) * 0.1;
+          reactorGroup.rotation.y = Math.sin(time * 0.3) * 0.15;
+
+          if (laserReticle1) laserReticle1.rotation.z = time * 0.4;
+          if (laserReticle2) laserReticle2.rotation.z = -time * 0.6;
+          if (centralPrism) centralPrism.rotation.z = time * 0.25;
+
+          // Pulsation énergétique réactive
+          const pulse = isSpeaking ? (1 + Math.sin(time * 16) * 0.08) : (1 + Math.sin(time * 3) * 0.02);
+          if (centralPrism) centralPrism.scale.set(pulse, pulse, pulse);
+
+          if (coilGroup) {
+            coilGroup.rotation.z = isSpeaking ? time * 0.3 : time * 0.05;
+          }
+        }
+
+        if (renderer && scene && camera) {
+          renderer.render(scene, camera);
+        }
+      }
+
+      // =================================================================
+      // 🎛️ MODES HOLOGRAPHIQUES DU RÉACTEUR
+      // =================================================================
+
+      modeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          modeBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const mode = btn.getAttribute('data-mode');
+
+          if (mode === 'overview') {
+            spherical = { radius: 34, theta: 0, phi: Math.PI / 2.3 };
+            updateCam();
+            nodeInspector.classList.add('hidden');
+          } else {
+            openHologramInspector(mode);
+          }
+        });
+      });
+
+      async function openHologramInspector(mode) {
+        nodeInspector.classList.remove('hidden');
+
+        if (mode === 'core') {
+          spherical = { radius: 20, theta: 0, phi: Math.PI / 2.2 };
+          updateCam();
+          inspectorTitle.textContent = "⚡ NOYAU D'ÉNERGIE (ACTION)";
+          inspectorContent.innerHTML = `
+            <div class="sub-card">
+              <h4>MOTEUR AGENTIQUE GEMINI</h4>
+              <p>Raisonnement autonome, planification et exécution ReAct en temps réel.</p>
+            </div>
+            <div class="sub-card">
+              <h4>CONTRÔLE SYSTÈME</h4>
+              <p>• <strong>execute_command</strong> : Terminal Workspace</p>
+              <p>• <strong>write_file / read_file</strong> : Gestion Fichiers</p>
+            </div>
+          `;
+
+        } else if (mode === 'coils') {
+          spherical = { radius: 22, theta: Math.PI / 3, phi: Math.PI / 2.5 };
+          updateCam();
+          inspectorTitle.textContent = "🧠 ANNEAUX SYNAPTIQUES (MÉMOIRE)";
+          inspectorContent.innerHTML = "<p>Extraction de la mémoire permanente...</p>";
+
+          try {
+            const res = await fetch('/api/memory/profile', { headers: getHeaders() });
+            const data = await res.json();
+            const facts = data.facts || [];
+            const prefs = data.user_preferences || {};
+
+            let html = `
+              <div class="sub-card">
+                <h4>PROFIL UTILISATEUR</h4>
+                <p><strong>Nom :</strong> ${escapeHtml(prefs.name || 'Nathan')}</p>
+                <p><strong>Environnement :</strong> ${escapeHtml(prefs.environment || 'VPS Debian / Tasker')}</p>
+              </div>
+              <div class="sub-card">
+                <h4>FAITS MÉMORISÉS (${facts.length})</h4>
+            `;
+            if (facts.length === 0) {
+              html += `<p style="color:#94a3b8">Hercul apprendra de vos conversations automatiquement.</p>`;
+            } else {
+              facts.forEach(f => {
+                html += `<p style="margin-bottom:6px">• ${escapeHtml(f.fact)}</p>`;
+              });
+            }
+            html += `</div>`;
+            inspectorContent.innerHTML = html;
+          } catch (e) {
+            inspectorContent.innerHTML = `<p style="color:#ef4444">Erreur mémoire.</p>`;
+          }
+
+        } else if (mode === 'optics') {
+          spherical = { radius: 22, theta: -Math.PI / 3, phi: Math.PI / 2.5 };
+          updateCam();
+          inspectorTitle.textContent = "🌐 LENTILLE OPTIQUE (WEB & VISION)";
+          inspectorContent.innerHTML = `
+            <div class="sub-card">
+              <h4>MOTEUR PLAYWRIGHT</h4>
+              <p>Navigation web Chromium et extraction de données en direct.</p>
+            </div>
+            <div class="sub-card">
+              <h4>DERNIÈRE CAPTURE VISUELLE</h4>
+              <div id="live-browser-view" style="color:#94a3b8">Aucune capture récente. Donnez une mission web à Hercul !</div>
+            </div>
+          `;
+
+        } else if (mode === 'relay') {
+          spherical = { radius: 24, theta: Math.PI, phi: Math.PI / 2.1 };
+          updateCam();
+          inspectorTitle.textContent = "📱 RELAIS MOBILE TASKER";
+          inspectorContent.innerHTML = `
+            <div class="sub-card">
+              <h4>ENDPOINT VOCAL TASKER (GET)</h4>
+              <pre style="background:rgba(0,0,0,0.5);padding:8px;border-radius:6px;font-size:0.75rem;color:#10b981;overflow-x:auto">GET http://${window.location.host}/api/tasker/ask?q=%VOICE&key=VOTRE_CLE_SECRETE</pre>
+            </div>
+          `;
+        }
+      }
+
+      // =================================================================
+      // 🗣️ VÉRITABLE VOIX HUMAINE DE FEMME (VIVIENNE NEURAL HD)
+      // =================================================================
+
+      async function speakVivienne(text) {
+        if (!ttsEnabled) return;
+
+        if (currentAudio) {
+          currentAudio.pause();
+          currentAudio = null;
+        }
+
+        const cleanText = text
+          .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+          .replace(/\*\*|\*|`|#/g, '')
+          .trim();
+
+        if (!cleanText) return;
+
+        try {
+          // Appel de la voix féminine ultra-réaliste Vivienne
+          const res = await fetch('/api/voice/tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: cleanText, voice: 'fr-FR-VivienneMultilingualNeural' })
+          });
+
+          if (!res.ok) throw new Error("TTS non disponible");
+
+          const blob = await res.blob();
+          const audioUrl = URL.createObjectURL(blob);
+          currentAudio = new Audio(audioUrl);
+
+          currentAudio.onplay = () => {
+            isSpeaking = true;
+            voiceWaves.classList.remove('hidden');
+          };
+          currentAudio.onended = () => {
+            isSpeaking = false;
+            voiceWaves.classList.add('hidden');
+          };
+          currentAudio.onerror = () => {
+            isSpeaking = false;
+            voiceWaves.classList.add('hidden');
+          };
+
+          await currentAudio.play();
+
+        } catch (e) {
+          console.warn("Fallback WebSpeech :", e);
+          if (window.speechSynthesis) {
+            const u = new SpeechSynthesisUtterance(cleanText);
+            u.lang = 'fr-FR';
+            window.speechSynthesis.speak(u);
+          }
+        }
+      }
+
+      ttsHudBtn.addEventListener('click', () => {
+        ttsEnabled = !ttsEnabled;
+        if (ttsEnabled) {
+          ttsHudBtn.classList.remove('muted');
+          ttsHudBtn.innerHTML = '<span>🔊</span> VOIX ACTIVE';
+        } else {
+          if (currentAudio) currentAudio.pause();
+          ttsHudBtn.classList.add('muted');
+          ttsHudBtn.innerHTML = '<span>🔇</span> VOIX COUPÉE';
+          voiceWaves.classList.add('hidden');
+          isSpeaking = false;
+        }
+      });
+
+      // =================================================================
+      // 🎙️ RECONNAISSANCE VOCALE (STT)
+      // =================================================================
+
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRec) {
+        recognition = new SpeechRec();
+        recognition.lang = 'fr-FR';
+        recognition.continuous = false;
+        recognition.interimResults = true;
+
+        recognition.onstart = () => {
+          isListening = true;
+          micBtn.classList.add('listening');
+          if (currentAudio) currentAudio.pause();
+        };
+
+        recognition.onresult = (e) => {
+          let t = '';
+          for (let i = e.resultIndex; i < e.results.length; ++i) {
+            t += e.results[i][0].transcript;
+          }
+          userInput.value = t;
+        };
+
+        recognition.onend = () => {
+          isListening = false;
+          micBtn.classList.remove('listening');
+          if (userInput.value.trim().length > 0) {
+            chatForm.dispatchEvent(new Event('submit'));
+          }
+        };
+
+        recognition.onerror = (e) => {
+          isListening = false;
+          micBtn.classList.remove('listening');
+        };
+
+        micBtn.addEventListener('click', () => {
+          if (isListening) recognition.stop();
+          else recognition.start();
+        });
+      }
+
+      // =================================================================
+      // 💬 CHAT & EXÉCUTION D'ACTIONS
+      // =================================================================
+
+      chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = userInput.value.trim();
+        if (!text) return;
+
+        appendEntry('user', text);
+        userInput.value = '';
+
+        const thinking = appendEntry('assistant', '🔮 Traitement du Réacteur en cours...');
+
+        try {
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ message: text, session_id: 'web_session' })
+          });
+
+          if (!res.ok) {
+            const err = await res.json();
+            const bodyElem = thinking.querySelector('.msg-content');
+            if (bodyElem) bodyElem.textContent = `❌ Erreur : ${err.detail || 'Problème de connexion'}`;
+            return;
+          }
+
+          const data = await res.json();
+
+          let toolsHtml = '';
+          if (data.tools_executed && data.tools_executed.length > 0) {
+            data.tools_executed.forEach(t => {
+              toolsHtml += `<div class="action-tag">⚡ ${escapeHtml(t.tool)}</div>`;
+              if (t.result && t.result.filename) {
+                const v = document.getElementById('live-browser-view');
+                if (v) v.innerHTML = `<img src="/screenshots/${t.result.filename}" style="width:100%;border-radius:8px;border:1px solid #00f0ff">`;
+              }
+            });
+          }
+
+          const bodyElem = thinking.querySelector('.msg-content');
+          if (bodyElem) {
+            bodyElem.innerHTML = `
+              ${toolsHtml}
+              <div>${escapeHtml(data.response)}</div>
+            `;
+          }
+
+          // LECTURE AVEC LA VRAIE VOIX HUMAINE DE FEMME (VIVIENNE NEURAL)
+          speakVivienne(data.response);
+          fetchTelemetry();
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        } catch (err) {
+          const bodyElem = thinking.querySelector('.msg-content');
+          if (bodyElem) bodyElem.textContent = `❌ Erreur réseau : ${err.message}`;
+        }
+      });
+
+      function appendEntry(role, text) {
+        const d = document.createElement('div');
+        d.className = `dialogue-bubble ${role}`;
+        d.innerHTML = `
+          <span class="bubble-speaker">${role === 'user' ? 'NATHAN :' : 'HERCUL :'}</span>
+          <div class="msg-content">${escapeHtml(text)}</div>
+        `;
+        messagesContainer.appendChild(d);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        return d;
+      }
+
+      function escapeHtml(str) {
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return String(str).replace(/[&<>"']/g, s => map[s]);
+      }
+
+      async function fetchTelemetry() {
+        try {
+          const res = await fetch('/api/memory/stats', { headers: getHeaders() });
+          if (res.ok) {
+            const s = await res.json();
+            hudMemoryCount.textContent = (s.profile_facts_count || 0) + (s.episodic_memories_count || 0);
+          }
+        } catch (e) {}
+      }
+
+      async function pollLiveNotifications() {
+        try {
+          const res = await fetch('/api/notifications/poll');
+          if (res.ok) {
+            const data = await res.json();
+            if (data.notifications && data.notifications.length > 0) {
+              data.notifications.forEach(n => {
+                const bubble = appendEntry('assistant', `⏰ **MINUTEUR TERMINÉ** ⏰ : « ${n.message} »`);
+                speakVivienne(`Nathan, ton minuteur est terminé : ${n.message}`);
+              });
+            }
+          }
+        } catch (e) {}
+      }
+
+      initThree();
+      animate();
+      fetchTelemetry();
+      setInterval(fetchTelemetry, 15000);
+      setInterval(pollLiveNotifications, 2000);
+    });
+  </script>
+</body>
+</html>
